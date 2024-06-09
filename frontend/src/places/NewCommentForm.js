@@ -1,40 +1,31 @@
-import { useState, useEffect } from "react"
-import { useHistory } from "react-router"
+import React, { useState, useContext } from "react";
+import { useHistory } from "react-router-dom";
+import { CurrentUser } from "../contexts/CurrentUser"; // Import CurrentUser context
 
 function NewCommentForm({ place, onSubmit }) {
-
-    const [authors, setAuthors] = useState([])
-
     const [comment, setComment] = useState({
         content: '',
         stars: 3,
         rant: false,
-        authorId: ''
-    })
+        authorId: '' // Assuming you'll set this elsewhere if needed
+    });
 
-    useEffect(() => {
-        const fetchData = async () => {
-            const response = await fetch(`http://localhost:5000/users`)
-            const users = await response.json()
-            setComment({ ...comment, authorId: users[0]?.userId})
-            setAuthors(users)
-        }
-        fetchData()
-    }, [])
-
-    let authorOptions = authors.map(author => {
-        return <option key={author.userId} value={author.userId}>{author.firstName} {author.lastName}</option>
-    })
+    const history = useHistory(); // Added useHistory
+    const { currentUser } = useContext(CurrentUser); // Access currentUser from CurrentUser context
 
     function handleSubmit(e) {
-        e.preventDefault()
-        onSubmit(comment)
+        e.preventDefault();
+        onSubmit(comment);
         setComment({
             content: '',
             stars: 3,
             rant: false,
-            authorId: authors[0]?.userId
-        })
+            authorId: currentUser.userId // Assuming currentUser is defined elsewhere
+        });
+    }
+
+    if (!currentUser) {
+        return <p>You must be logged in to leave a rant or rave.</p>;
     }
 
     return (
@@ -54,12 +45,6 @@ function NewCommentForm({ place, onSubmit }) {
             </div>
             <div className="row">
                 <div className="form-group col-sm-4">
-                    <label htmlFor="state">Author</label>
-                    <select className="form-control" value={comment.authorId} onChange={e => setComment({ ...comment, authorId: e.target.value })}>
-                        {authorOptions}
-                    </select>
-                </div>
-                <div className="form-group col-sm-4">
                     <label htmlFor="stars">Star Rating</label>
                     <input
                         value={comment.stars}
@@ -74,10 +59,10 @@ function NewCommentForm({ place, onSubmit }) {
                     />
                 </div>
                 <div className="form-group col-sm-4">
-                    <label htmlFor="rand">Rant</label>
+                    <label htmlFor="rant">Rant</label>
                     <input
-                        checked={place.rant}
-                        onClick={e => setComment({ ...comment, rant: e.target.checked })}
+                        checked={comment.rant}
+                        onChange={e => setComment({ ...comment, rant: e.target.checked })}
                         type="checkbox"
                         id="rant"
                         name="rant"
@@ -87,7 +72,7 @@ function NewCommentForm({ place, onSubmit }) {
             </div>
             <input className="btn btn-primary" type="submit" value="Add Comment" />
         </form>
-    )
+    );
 }
 
-export default NewCommentForm
+export default NewCommentForm;
